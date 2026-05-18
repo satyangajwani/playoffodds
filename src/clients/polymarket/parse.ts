@@ -1,14 +1,11 @@
 import {
+  type PolyTokenId,
   isoUtc,
   polyEventSlug,
   polyTokenId,
   probability,
-  type PolyTokenId,
 } from "../../domain/ids.ts";
-import type {
-  PolyChampionMarket,
-  PolyGameMarket,
-} from "../../domain/types.ts";
+import type { PolyChampionMarket, PolyGameMarket } from "../../domain/types.ts";
 import type { PolyEventRaw, PolyMarketRaw } from "./schema.ts";
 
 // Per-match event slug: cricipl-<team3letter>-<team3letter>-YYYY-MM-DD
@@ -33,30 +30,40 @@ const probOrNull = (n: number | null) => {
   return probability(n);
 };
 
-// Convert a per-match event with its single (or paired) market.
+// Convert a per-match event into a normalized record. Handles two shapes:
+//
+// 1. Team-name outcomes:  outcomes=["Rajasthan Royals","Lucknow Super Giants"],
+//                         outcomePrices=["0.46","0.54"]
+//    → teamARaw/teamBRaw = the outcome strings.
+//
+// 2. Yes/No outcomes:     outcomes=["Yes","No"], outcomePrices=["0.42","0.58"]
+//    → Yes is for the team named in the question; we fall back to the slug's
+//      team abbreviations (e.g., "cricipl-che-sun-..." → teamARaw="che", teamBRaw="sun")
+//      and treat outcome[0] (Yes) as team A's price.
 export function parsePerMatchEvent(event: PolyEventRaw): PolyGameMarket | null {
   const m = event.slug.match(PER_MATCH_RE);
   if (!m) return null;
   const [, aRaw, bRaw, ymd] = m;
   if (!aRaw || !bRaw || !ymd) return null;
 
-  // Per-match events have a single market with two outcomes
   const market = event.markets?.[0];
   if (!market) return null;
   const outcomes = parseArrLike<string>(market.outcomes);
   const prices = parseArrLike<string>(market.outcomePrices);
-  if (!outcomes || outcomes.length !== 2) return null;
-  if (!prices || prices.length !== 2) return null;
+  if (!outcomes || outcomes.length !== 2 || !prices || prices.length !== 2) return null;
 
   const aPrice = Number(prices[0]);
   const bPrice = Number(prices[1]);
 
-  // Outcomes contain full team names (e.g., "Chennai Super Kings", "Sunrisers Hyderabad")
+  const isYesNo = outcomes[0]?.toLowerCase() === "yes" || outcomes[1]?.toLowerCase() === "no";
+  const teamARaw = isYesNo ? aRaw : (outcomes[0] ?? "");
+  const teamBRaw = isYesNo ? bRaw : (outcomes[1] ?? "");
+
   return {
     eventSlug: polyEventSlug(event.slug),
     dateUtc: isoUtc(`${ymd}T12:00:00Z`), // midday IST stand-in; matcher uses date only
-    teamARaw: outcomes[0] ?? "",
-    teamBRaw: outcomes[1] ?? "",
+    teamARaw,
+    teamBRaw,
     outcomePriceA: probOrNull(aPrice),
     outcomePriceB: probOrNull(bPrice),
     resolved: market.closed === true,

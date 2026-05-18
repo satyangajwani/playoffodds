@@ -1,10 +1,5 @@
 import { config } from "../config.ts";
-import {
-  fixtureId,
-  probability,
-  type Probability,
-  type TeamCode,
-} from "../domain/ids.ts";
+import { type Probability, type TeamCode, fixtureId, probability } from "../domain/ids.ts";
 import type {
   ChampionMarketOdds,
   Confidence,
@@ -14,18 +9,21 @@ import type {
   MatchOdds,
   PolyChampionMarket,
   PolyGameMarket,
-  SourceTag,
   SnapshotWarning,
+  SourceTag,
 } from "../domain/types.ts";
 import { fixtureKeyDate } from "../shared/time.ts";
 import { kalshiGameToKey, pairKey } from "./kalshi-parse.ts";
 import { polyGameToKey } from "./polymarket-parse.ts";
 import {
+  TEAMS,
   fullNameToTeam,
   kalshiCodeToTeam,
   polyFullSlugFragmentToTeam,
-  TEAMS,
+  polyShortToTeam,
 } from "./team-codes.ts";
+
+const polyTeamFromRaw = (raw: string) => fullNameToTeam(raw) ?? polyShortToTeam(raw);
 
 interface KalshiByKey {
   market: KalshiGameMarket;
@@ -81,8 +79,8 @@ function kalshiToCanonicalAB(m: KalshiGameMarket): KalshiByKey | null {
 }
 
 function polyToCanonicalAB(m: PolyGameMarket): PolyByKey | null {
-  const teamA = fullNameToTeam(m.teamARaw);
-  const teamB = fullNameToTeam(m.teamBRaw);
+  const teamA = polyTeamFromRaw(m.teamARaw);
+  const teamB = polyTeamFromRaw(m.teamBRaw);
   if (!teamA || !teamB) return null;
   const [a, b] = [teamA, teamB].sort();
   if (!a || !b) return null;
@@ -98,10 +96,7 @@ function polyToCanonicalAB(m: PolyGameMarket): PolyByKey | null {
 
 const avg = (a: number, b: number): Probability => probability((a + b) / 2);
 
-const confidenceFor = (
-  sources: SourceTag,
-  disagreementPp: number | null,
-): Confidence => {
+const confidenceFor = (sources: SourceTag, disagreementPp: number | null): Confidence => {
   if (sources === "fallback-50-50" || sources === "fallback-bt") return "low";
   if (sources === "kalshi-only" || sources === "poly-only") return "medium";
   if (disagreementPp != null && disagreementPp > config.DISAGREEMENT_PP) return "medium";
@@ -278,8 +273,7 @@ export function joinMarkets(inputs: JoinInputs): JoinOutput {
       polyP,
       avgP,
       resolvedSource,
-      disagreementPp:
-        kalshiP != null && polyP != null ? Math.abs(kalshiP - polyP) : null,
+      disagreementPp: kalshiP != null && polyP != null ? Math.abs(kalshiP - polyP) : null,
     });
   }
 

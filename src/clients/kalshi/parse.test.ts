@@ -1,24 +1,29 @@
 import { describe, expect, it } from "vitest";
 import { parseChampionMarket, parseGameMarket } from "./parse.ts";
 
+// Test fixtures match the schema's *output* type (post numLike transform): every numeric
+// field is `number | null`, never undefined.
 const rawGame = {
   ticker: "KXIPLGAME-26MAY180600CSKSRH-CSK",
   title: "Chennai Super Kings vs Sunrisers Hyderabad Winner?",
-  status: "open" as const,
+  status: "open",
   yes_bid_dollars: 0.42,
   yes_ask_dollars: 0.46,
   last_price_dollars: 0.44,
   volume_fp: 12345.6,
+  settlement_value: null,
 };
 
 const rawChampion = {
   ticker: "KXIPL-26-RCB",
   event_ticker: "KXIPL-26",
   title: "Will Royal Challengers Bengaluru win the IPL?",
-  status: "open" as const,
+  status: "open",
   yes_bid_dollars: 0.34,
   yes_ask_dollars: 0.37,
   last_price_dollars: 0.355,
+  volume_fp: null,
+  settlement_value: null,
 };
 
 describe("kalshi parse", () => {

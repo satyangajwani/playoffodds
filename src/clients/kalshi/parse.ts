@@ -1,13 +1,5 @@
-import {
-  isoUtc,
-  kalshiEventTicker,
-  kalshiTicker,
-  probability,
-} from "../../domain/ids.ts";
-import type {
-  KalshiChampionMarket,
-  KalshiGameMarket,
-} from "../../domain/types.ts";
+import { isoUtc, kalshiEventTicker, kalshiTicker, probability } from "../../domain/ids.ts";
+import type { KalshiChampionMarket, KalshiGameMarket } from "../../domain/types.ts";
 import { midpoint } from "../base.ts";
 import type { KalshiMarketRaw } from "./schema.ts";
 
@@ -17,8 +9,18 @@ import type { KalshiMarketRaw } from "./schema.ts";
 // MMM is uppercase 3-letter month abbrev.
 const GAME_TICKER_RE = /^KXIPLGAME-(\d{2})([A-Z]{3})(\d{2})(\d{4})([A-Z]+)-([A-Z]+)$/;
 const MONTHS: Record<string, number> = {
-  JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5,
-  JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11,
+  JAN: 0,
+  FEB: 1,
+  MAR: 2,
+  APR: 3,
+  MAY: 4,
+  JUN: 5,
+  JUL: 6,
+  AUG: 7,
+  SEP: 8,
+  OCT: 9,
+  NOV: 10,
+  DEC: 11,
 };
 
 // Champion ticker:

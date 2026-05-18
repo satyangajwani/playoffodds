@@ -11,6 +11,12 @@ npm-debug.log*
 .dev.vars
 .dev.vars.*
 
+# local dev sqlite (Phase A)
+dev.db
+dev.db-journal
+dev.db-shm
+dev.db-wal
+
 # build
 dist/
 .output/

@@ -1,8 +1,8 @@
 import { config } from "../../config.ts";
-import { clientError, type ClientError } from "../../shared/errors.ts";
-import { err, ok, type Result } from "../../shared/result.ts";
+import { type ClientError, clientError } from "../../shared/errors.ts";
+import { type Result, err, ok } from "../../shared/result.ts";
 import { fetchJson } from "../base.ts";
-import { KalshiMarketsResponse, type KalshiMarketRaw } from "./schema.ts";
+import { type KalshiMarketRaw, KalshiMarketsResponse } from "./schema.ts";
 
 const paged = async (url: string): Promise<Result<KalshiMarketRaw[], ClientError>> => {
   const out: KalshiMarketRaw[] = [];

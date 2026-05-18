@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { fixtureId, isoUtc, kalshiTicker, polyEventSlug, probability, teamCode } from "../domain/ids.ts";
+import {
+  fixtureId,
+  isoUtc,
+  kalshiTicker,
+  polyEventSlug,
+  probability,
+  teamCode,
+} from "../domain/ids.ts";
 import type { Fixture, KalshiGameMarket, PolyGameMarket } from "../domain/types.ts";
 import { joinMarkets } from "./join.ts";
 
@@ -23,7 +30,7 @@ const kalshi: KalshiGameMarket = {
   pairedTeamCode: "SRH",
   startUtc: isoUtc("2026-05-18T14:00:00Z"),
   yesBidDollars: 0.46,
-  yesAskDollars: 0.50,
+  yesAskDollars: 0.5,
   lastPriceDollars: 0.48,
   midpoint: probability(0.48),
   volumeFp: null,
@@ -101,7 +108,11 @@ describe("joinMarkets", () => {
   });
 
   it("flags source disagreement > 15pp as warning", () => {
-    const wildPoly: PolyGameMarket = { ...poly, outcomePriceA: probability(0.22), outcomePriceB: probability(0.78) };
+    const wildPoly: PolyGameMarket = {
+      ...poly,
+      outcomePriceA: probability(0.22),
+      outcomePriceB: probability(0.78),
+    };
     const out = joinMarkets({
       fixtures: [fixtureCskSrh],
       kalshiGames: [kalshi],

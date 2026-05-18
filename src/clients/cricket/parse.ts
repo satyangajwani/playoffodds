@@ -1,5 +1,5 @@
-import type { StandingRow } from "../../domain/types.ts";
 import { teamCode } from "../../domain/ids.ts";
+import type { StandingRow } from "../../domain/types.ts";
 
 // Minimal cricinfo points-table extractor. Cricinfo embeds a Next.js __NEXT_DATA__
 // JSON blob in the page that's much more stable than the rendered DOM. We try that first;
@@ -30,10 +30,19 @@ const TEAM_NAME_TO_CODE: Record<string, string> = {
 };
 
 const ABBR_TO_CODE: Record<string, string> = {
-  MI: "MI", CSK: "CSK", RCB: "RCB", KKR: "KKR", DC: "DC",
-  PBKS: "PBKS", RR: "RR", SRH: "SRH", GT: "GT", LSG: "LSG",
+  MI: "MI",
+  CSK: "CSK",
+  RCB: "RCB",
+  KKR: "KKR",
+  DC: "DC",
+  PBKS: "PBKS",
+  RR: "RR",
+  SRH: "SRH",
+  GT: "GT",
+  LSG: "LSG",
   // Sometimes cricinfo uses BLR for Bangalore/Bengaluru and PK for Punjab Kings
-  BLR: "RCB", PK: "PBKS",
+  BLR: "RCB",
+  PK: "PBKS",
 };
 
 const codeFor = (name: string | undefined, abbr: string | undefined): string | null => {

@@ -1,6 +1,6 @@
 import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
 import { config } from "../config.ts";
-import { isoUtc, type IsoUtc } from "../domain/ids.ts";
+import { type IsoUtc, isoUtc } from "../domain/ids.ts";
 
 // Canonical fixture key: date in IST (so a 7:30pm match doesn't straddle a date boundary).
 export const fixtureKeyDate = (utc: IsoUtc): string =>

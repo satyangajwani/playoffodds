@@ -1,6 +1,6 @@
 import { config } from "../config.ts";
 import { type ClientError, clientError } from "../shared/errors.ts";
-import { err, ok, type Result } from "../shared/result.ts";
+import { type Result, err, ok } from "../shared/result.ts";
 
 export type FetchJson = <T>(
   source: ClientError["source"],

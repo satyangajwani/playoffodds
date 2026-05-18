@@ -64,12 +64,33 @@ describe("polymarket parse", () => {
     expect(ids).toEqual(["78489029316276", "61180451164714"]);
   });
 
+  it("falls back to slug abbreviations when outcomes are Yes/No (binary markets)", () => {
+    const yesNo = {
+      ...rawPerMatchEvent,
+      slug: "cricipl-che-sun-2026-05-18",
+      markets: [
+        {
+          id: "999",
+          slug: "cricipl-che-sun-2026-05-18",
+          outcomes: ["Yes", "No"],
+          outcomePrices: ["0.55", "0.45"],
+          closed: false,
+        },
+      ],
+    };
+    const m = parsePerMatchEvent(yesNo);
+    expect(m).not.toBeNull();
+    expect(m?.teamARaw).toBe("che");
+    expect(m?.teamBRaw).toBe("sun");
+    expect(m?.outcomePriceA).toBeCloseTo(0.55, 4);
+  });
+
   it("handles stringified arrays from gamma JSON quirks", () => {
     const m = parseChampionSubMarket({
       ...rawChampionSubMarket,
       outcomes: JSON.stringify(["Yes", "No"]),
       outcomePrices: JSON.stringify(["0.40", "0.60"]),
     });
-    expect(m?.yesPrice).toBeCloseTo(0.40, 4);
+    expect(m?.yesPrice).toBeCloseTo(0.4, 4);
   });
 });

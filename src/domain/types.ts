@@ -61,7 +61,7 @@ export interface StandingRow {
 export interface KalshiGameMarket {
   ticker: KalshiTicker;
   title: string;
-  status: "unopened" | "open" | "paused" | "closed" | "settled";
+  status: string; // 'unopened'|'open'|'active'|'paused'|'closed'|'settled' (only 'settled' is load-bearing)
   yesSideTeamCode: string; // raw, not branded — matcher normalizes
   pairedTeamCode: string; // raw
   startUtc: IsoUtc;

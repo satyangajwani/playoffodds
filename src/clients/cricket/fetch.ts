@@ -1,6 +1,6 @@
 import { config } from "../../config.ts";
-import { clientError, type ClientError } from "../../shared/errors.ts";
-import { err, ok, type Result } from "../../shared/result.ts";
+import { type ClientError, clientError } from "../../shared/errors.ts";
+import { type Result, err, ok } from "../../shared/result.ts";
 
 // Cricinfo blocks naive fetches. Send a real-browser-style UA and Accept-Language;
 // scraping is fragile so this is best-effort with retries.

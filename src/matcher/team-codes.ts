@@ -1,4 +1,4 @@
-import { teamCode, type TeamCode } from "../domain/ids.ts";
+import { type TeamCode, teamCode } from "../domain/ids.ts";
 
 // Single source of truth for team identity across venues.
 // Per pattern-recognition reviewer: a hand-written table beats fuzzy matching for 10 teams.
@@ -41,10 +41,7 @@ export const TEAMS: TeamRecord[] = [
     primaryColorHex: "#DA1818",
     kalshiCode: "RCB",
     polyShortCodes: ["ben", "rcb", "blr"],
-    polyFullSlugFragments: [
-      "royal-challengers-bengaluru",
-      "royal-challengers-bangalore",
-    ],
+    polyFullSlugFragments: ["royal-challengers-bengaluru", "royal-challengers-bangalore"],
   },
   {
     code: teamCode("KKR"),
