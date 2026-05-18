@@ -277,6 +277,19 @@ table.prob td.num.zero { color: var(--cb-text-faint); }
   text-transform: uppercase;
   color: var(--cb-green-deep);
 }
+.cross-explainer {
+  margin: 0;
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--cb-text-muted);
+  background: white;
+  border-bottom: 1px solid var(--cb-border);
+}
+.cross-explainer strong {
+  color: var(--cb-text-primary);
+  font-weight: 700;
+}
 .cross table { width: 100%; border-collapse: collapse; }
 .cross th {
   padding: 8px 12px;

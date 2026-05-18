@@ -5,7 +5,6 @@ import { getAllTeams, getLatestSnapshot, getSnapshotAtOrBefore } from "../storag
 import { istDateTime, parseTtParam, pct, ttPath } from "./format.ts";
 import { styleSheetText } from "./styles.ts";
 import { ChampionCrossCheck } from "./templates/ChampionCrossCheck.tsx";
-import { Footer } from "./templates/Footer.tsx";
 import { Hero } from "./templates/Hero.tsx";
 import { Layout } from "./templates/Layout.tsx";
 import { ProbabilityTable } from "./templates/ProbabilityTable.tsx";
@@ -130,11 +129,8 @@ function renderPage(
   } & Awaited<ReturnType<typeof loadPageVM>>,
   embedded: boolean,
 ) {
-  const leader = vm.rows[0];
-  const title = leader
-    ? `${leader.shortName} ${pct(leader.pChampion)} to win IPL 2026 · Playoff probabilities`
-    : "IPL 2026 Playoff Probabilities";
-  const description = `Live IPL 2026 playoff and championship probabilities from Kalshi + Polymarket markets. Snapshot ${istDateTime(vm.takenAtUtc)}.`;
+  const title = "IPL Playoff Odds";
+  const description = `Live IPL 2026 playoff and championship probabilities. Snapshot ${istDateTime(vm.takenAtUtc)}.`;
   const ogPath = vm.isHistorical ? `/og/${ttPath(vm.takenAtUtc)}.png` : "/og/latest.png";
   return html`<!doctype html>${raw(
     (
@@ -151,7 +147,6 @@ function renderPage(
         <StalenessBanner vm={vm} />
         <ProbabilityTable vm={vm} />
         <ChampionCrossCheck vm={vm} />
-        {embedded ? null : <Footer />}
       </Layout>
     ).toString(),
   )}`;

@@ -8,15 +8,23 @@ interface Props {
 
 export const ChampionCrossCheck: FC<Props> = ({ vm }) => (
   <section class="cross">
-    <h2>Champion: model vs market</h2>
-    <table aria-label="Derived vs direct champion-market probability">
+    <h2>Two ways to estimate the champion</h2>
+    <p class="cross-explainer">
+      The <strong>Simulation</strong> column is built bottom-up: we average per-game prediction-market
+      prices for each remaining match, then run 25,000 Monte Carlo simulations of the rest of the
+      season (league games + playoff bracket) and count how often each team wins. The{" "}
+      <strong>Direct market</strong> column reads the championship-winner contract price for each
+      team directly. Differences over 10 percentage points are flagged — usually the model
+      over-weights the bracket advantage that top-2 seeds get in Qualifier 1.
+    </p>
+    <table aria-label="Simulation vs direct champion-market probability">
       <thead>
         <tr>
           <th class="team-col" scope="col">
             Team
           </th>
-          <th scope="col">Our model</th>
-          <th scope="col">Market avg</th>
+          <th scope="col">Simulation</th>
+          <th scope="col">Direct market</th>
           <th scope="col">Δ</th>
         </tr>
       </thead>
