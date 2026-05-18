@@ -16,6 +16,7 @@ import {
   parseChampionSubMarket as parsePolyChamp,
   parsePerMatchEvent as parsePolyGame,
 } from "../src/clients/polymarket/parse.ts";
+import { config } from "../src/config.ts";
 import {
   fixtureId,
   isoUtc,
@@ -24,6 +25,7 @@ import {
   snapshotId,
   teamCode,
 } from "../src/domain/ids.ts";
+import type { TeamCode } from "../src/domain/ids.ts";
 import type {
   Fixture,
   KalshiChampionMarket,
@@ -32,8 +34,15 @@ import type {
   PolyGameMarket,
 } from "../src/domain/types.ts";
 import { joinMarkets } from "../src/matcher/join.ts";
+import { TEAMS } from "../src/matcher/team-codes.ts";
+import { type RemainingMatch, simulate } from "../src/monte-carlo/simulate.ts";
+import { strengthWinProb, teamStrengths } from "../src/monte-carlo/strength.ts";
 import { uuidv7 } from "../src/shared/uuid.ts";
-import { type DbAdapter, writeSnapshot } from "../src/storage/snapshot-writer.ts";
+import {
+  type DbAdapter,
+  type TeamProbabilityRow,
+  writeSnapshot,
+} from "../src/storage/snapshot-writer.ts";
 import { openDb } from "./db.ts";
 
 // ---------- Adapter ----------
@@ -191,6 +200,91 @@ async function main(): Promise<void> {
     `[snapshot:dev] matched: ${join.matchOdds.length} match_odds rows, ${join.championOdds.length} champion rows, ${join.warnings.length} warnings`,
   );
 
+  // ----------- Phase B: Monte Carlo simulation -----------
+  // Load current completed-game standings. Cricket scraping isn't yet wired (Phase A
+  // follow-up) so we use the May 18, 2026 standings from the plan (the research-confirmed
+  // sanity-check data) as the simulation seed. Phase B follow-up: derive this from cricinfo
+  // scrape or stored fixture_results when available.
+  const STANDINGS_MAY_18: Record<
+    string,
+    {
+      wins: number;
+      losses: number;
+      noResults: number;
+      nrr: number;
+    }
+  > = {
+    RCB: { wins: 9, losses: 4, noResults: 0, nrr: 1.065 },
+    GT: { wins: 8, losses: 5, noResults: 0, nrr: 0.4 },
+    SRH: { wins: 7, losses: 5, noResults: 0, nrr: 0.331 },
+    PBKS: { wins: 6, losses: 6, noResults: 1, nrr: 0.227 },
+    CSK: { wins: 6, losses: 6, noResults: 0, nrr: 0.027 },
+    RR: { wins: 6, losses: 6, noResults: 0, nrr: 0.027 },
+    DC: { wins: 6, losses: 7, noResults: 0, nrr: -0.871 },
+    KKR: { wins: 5, losses: 6, noResults: 1, nrr: -0.038 },
+    MI: { wins: 4, losses: 8, noResults: 0, nrr: -0.504 },
+    LSG: { wins: 4, losses: 8, noResults: 0, nrr: -0.701 },
+  };
+  const teamCodes = TEAMS.map((t) => t.code);
+  const initialByTeam = new Map<
+    TeamCode,
+    { wins: number; losses: number; noResults: number; nrr: number }
+  >(teamCodes.map((c) => [c, STANDINGS_MAY_18[c] ?? { wins: 0, losses: 0, noResults: 0, nrr: 0 }]));
+
+  // Build the per-team-mean and champion-market inputs for the strength model
+  const perTeamProbs = new Map<TeamCode, number[]>();
+  for (const t of teamCodes) perTeamProbs.set(t, []);
+  // Build canonical (teamA-alphabetic-first, teamB) pairs from match_odds, look up
+  // the fixture to get the team codes, and feed each side's avgP into perTeamProbs.
+  const fixturesById = new Map(fixtures.map((f) => [f.matchNumber, f]));
+  const remaining: RemainingMatch[] = [];
+  for (const mo of join.matchOdds) {
+    const f = fixturesById.get(mo.matchNumber);
+    if (!f || !f.teamA || !f.teamB) continue;
+    // joinMarkets sorts pair alphabetically so avgPa goes with the alphabetically-first team
+    const sorted = [f.teamA, f.teamB].sort();
+    const sortedA = sorted[0];
+    const sortedB = sorted[1];
+    if (!sortedA || !sortedB) continue;
+    perTeamProbs.get(sortedA)?.push(mo.avgPa);
+    perTeamProbs.get(sortedB)?.push(mo.avgPb);
+    remaining.push({
+      matchNumber: mo.matchNumber,
+      teamA: sortedA,
+      teamB: sortedB,
+      pA: mo.avgPa,
+    });
+  }
+
+  const championAvg = new Map(join.championOdds.map((c) => [c.team, c.avgP]));
+  const strengths = teamStrengths(teamCodes, {
+    perTeamProbs,
+    championAvgP: championAvg,
+  });
+  const playoffWinProb = strengthWinProb(strengths, teamCodes);
+
+  const simSeedString = `playoffodds:${new Date().toISOString().slice(0, 10)}`;
+  const simStart = Date.now();
+  const simResult = simulate({
+    iterations: config.MC_ITERATIONS,
+    seed: simSeedString,
+    teams: teamCodes,
+    initial: { byTeam: initialByTeam },
+    remaining,
+    playoffWinProb,
+  });
+  const simElapsed = Date.now() - simStart;
+  console.log(`[snapshot:dev] mc: ${config.MC_ITERATIONS} iterations in ${simElapsed}ms`);
+
+  const teamProbabilities: TeamProbabilityRow[] = teamCodes.map((t) => ({
+    team: t,
+    pPlayoffs: simResult.pPlayoffs.get(t) ?? 0,
+    pTop2: simResult.pTop2.get(t) ?? 0,
+    pChampion: simResult.pChampion.get(t) ?? 0,
+    simulatedWinsMean: simResult.meanWins.get(t) ?? null,
+    simulatedNrrMean: simResult.meanNrr.get(t) ?? null,
+  }));
+
   // Compute content hash
   const inputDigest = await sha256(
     JSON.stringify({
@@ -218,7 +312,9 @@ async function main(): Promise<void> {
       meta,
       matchOdds: join.matchOdds,
       championOdds: join.championOdds,
+      teamProbabilities,
       warnings: [...join.warnings, ...sourceWarnings],
+      mcMeta: { iterations: simResult.iterations, seedHash: 0 },
     });
   });
 

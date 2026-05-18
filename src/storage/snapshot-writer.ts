@@ -1,12 +1,22 @@
 // Snapshot writer abstracted over an opaque DB handle so the same code works against
 // better-sqlite3 (Phase A local dev) and the D1 binding (Phase B Workers cron).
 
+import type { TeamCode } from "../domain/ids.ts";
 import type {
   ChampionMarketOdds,
   MatchOdds,
   SnapshotMeta,
   SnapshotWarning,
 } from "../domain/types.ts";
+
+export interface TeamProbabilityRow {
+  team: TeamCode;
+  pPlayoffs: number;
+  pTop2: number;
+  pChampion: number;
+  simulatedWinsMean: number | null;
+  simulatedNrrMean: number | null;
+}
 
 // Minimal interface that better-sqlite3 and D1 both satisfy enough of for our needs.
 // In Phase A we instantiate this from better-sqlite3; in Phase B we wrap D1.prepare().
@@ -20,13 +30,15 @@ export interface SnapshotPayload {
   meta: SnapshotMeta;
   matchOdds: MatchOdds[];
   championOdds: ChampionMarketOdds[];
+  teamProbabilities: TeamProbabilityRow[];
   warnings: SnapshotWarning[];
+  mcMeta?: { iterations: number; seedHash: number };
 }
 
 const nowIso = () => new Date().toISOString();
 
 export function writeSnapshot(db: DbAdapter, payload: SnapshotPayload): void {
-  const { meta, matchOdds, championOdds, warnings } = payload;
+  const { meta, matchOdds, championOdds, teamProbabilities, warnings, mcMeta } = payload;
 
   // 1. Insert snapshot envelope (committed_at left NULL until the very end)
   db.exec(
@@ -40,10 +52,10 @@ export function writeSnapshot(db: DbAdapter, payload: SnapshotPayload): void {
       trigger: meta.trigger,
       schemaV: meta.schemaVersion,
       tbV: meta.tiebreakAlgorithmVersion,
-      mcIter: null,
-      mcSeed: null,
+      mcIter: mcMeta?.iterations ?? null,
+      mcSeed: mcMeta?.seedHash ?? null,
       hash: meta.contentHash,
-      payload: JSON.stringify({ matchOdds, championOdds, warnings }),
+      payload: JSON.stringify({ matchOdds, championOdds, teamProbabilities, warnings }),
     },
   );
 
@@ -67,6 +79,25 @@ export function writeSnapshot(db: DbAdapter, payload: SnapshotPayload): void {
         dis: row.disagreementPp,
         vol: row.combinedVolumeUsd,
         conf: row.confidence,
+      },
+    );
+  }
+
+  // 2b. Per-team Monte Carlo probabilities (Phase B)
+  for (const row of teamProbabilities) {
+    db.exec(
+      `INSERT INTO team_probabilities
+         (snapshot_id, team_code, p_playoffs, p_top2, p_champion,
+          simulated_wins_mean, simulated_nrr_mean)
+       VALUES (@sid, @team, @pp, @pt, @pc, @sw, @sn)`,
+      {
+        sid: meta.id,
+        team: row.team,
+        pp: row.pPlayoffs,
+        pt: row.pTop2,
+        pc: row.pChampion,
+        sw: row.simulatedWinsMean,
+        sn: row.simulatedNrrMean,
       },
     );
   }
