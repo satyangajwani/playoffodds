@@ -15,7 +15,7 @@ crons = ["*/10 * * * *"]
 [[d1_databases]]
 binding        = "DB"
 database_name  = "playoffodds"
-database_id    = "bf3115a0-318c-44af-8918-4db85e09ed53"
+database_id    = "REPLACE_AFTER_WRANGLER_D1_CREATE"
 migrations_dir = "migrations"
 
 # KV cache (Phase E will use this for the latest-snapshot fast path). For now it's optional —

@@ -1,8 +1,16 @@
 # playoffodds
 
-IPL playoff probability tracker — Kalshi + Polymarket averaged, Monte Carlo over remaining schedule, time-travel via snapshots.
+[![Live](https://img.shields.io/badge/live-playoffodds.dayprism.workers.dev-009270)](https://playoffodds.dayprism.workers.dev)
 
-See [docs/plans/2026-05-18-feat-ipl-playoff-probability-tracker-plan.md](docs/plans/2026-05-18-feat-ipl-playoff-probability-tracker-plan.md) for the full plan.
+IPL 2026 playoff probability tracker. Pulls per-match odds from Kalshi + Polymarket,
+averages them, runs 25,000-iteration Monte Carlo over the remaining season, and surfaces
+P(playoffs), P(top 2), P(champion) per team on a Cricbuzz-styled page. Time-travel via
+historical snapshots.
+
+- **Live:** https://playoffodds.dayprism.workers.dev
+- **Summary doc** for non-technical sharing: [SUMMARY.md](SUMMARY.md)
+- **Full plan + deepening + resolved decisions:** [docs/plans/](docs/plans/)
+- **Deploy your own copy:** [RUNBOOK.md](RUNBOOK.md)
 
 ## Phase A status
 
