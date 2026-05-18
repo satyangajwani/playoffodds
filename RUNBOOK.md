@@ -3,6 +3,23 @@
 Phase D ships the IPL playoff tracker to Cloudflare Workers + D1 + Cron.
 This is the 5-command checklist plus verification queries.
 
+## Live deployment
+
+- **URL:** [https://playoffodds.dayprism.workers.dev](https://playoffodds.dayprism.workers.dev)
+- **Account:** `Sg@sgplex.com's Account` (`a75cab314e7a659c0a4339292f707e14`)
+- **D1 database:** `playoffodds` (`bf3115a0-318c-44af-8918-4db85e09ed53`)
+- **Cron:** `*/10 * * * *` (every 10 minutes)
+- **First deployed:** 2026-05-18
+
+Share these URLs with the team:
+
+- `/` — live tracker
+- `/embed` — content-only iframe
+- `/api/snapshot` — JSON API (CORS allows all origins)
+- `/at/2026-05-18T1830` — historical snapshot
+
+## First-deploy checklist (already done — keep for re-deploys)
+
 ## Pre-deploy (~5 minutes, requires your Cloudflare account)
 
 1. **Authenticate wrangler** (opens a browser window for OAuth):

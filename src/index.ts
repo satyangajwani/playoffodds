@@ -35,7 +35,7 @@ import type { ClientError } from "./shared/errors.ts";
 import { ok, type Result } from "./shared/result.ts";
 import { applyWritesD1, buildSnapshotWrites } from "./storage/snapshot-writer.ts";
 import { attachAdminRoutes } from "./web/admin.ts";
-import { attachOgRoutes } from "./web/og.ts";
+import { attachOgRoutes } from "./web/og.tsx";
 import { buildApp } from "./web/routes.tsx";
 
 interface Env {

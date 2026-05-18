@@ -7,7 +7,7 @@ import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";
 import { d1ShimFromSqlite } from "../src/storage/d1-shim.ts";
 import { attachAdminRoutes } from "../src/web/admin.ts";
-import { attachOgRoutes } from "../src/web/og.ts";
+import { attachOgRoutes } from "../src/web/og.tsx";
 import { type AppEnv, buildApp } from "../src/web/routes.tsx";
 import { DB_PATH, openDb } from "./db.ts";
 
