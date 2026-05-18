@@ -1,0 +1,29 @@
+# macOS
+.DS_Store
+
+# node
+node_modules/
+*.log
+npm-debug.log*
+
+# wrangler
+.wrangler/
+.dev.vars
+.dev.vars.*
+
+# build
+dist/
+.output/
+*.tsbuildinfo
+
+# test
+coverage/
+
+# IDE
+.vscode/
+.idea/
+
+# env
+.env
+.env.local
+.env.*.local
