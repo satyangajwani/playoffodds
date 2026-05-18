@@ -1,0 +1,28 @@
+name = "playoffodds"
+main = "src/index.ts"
+compatibility_date = "2026-05-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Phase B will wire up the cron trigger; for Phase A we only need local D1 + snapshot scripts.
+# [triggers]
+# crons = ["*/10 * * * *"]
+
+# Local D1 binding. To attach a remote database, run:
+#   npx wrangler login
+#   npx wrangler d1 create playoffodds
+# Then paste the returned database_id below and uncomment the migrations_dir.
+[[d1_databases]]
+binding       = "DB"
+database_name = "playoffodds"
+database_id   = "PLACEHOLDER_RUN_WRANGLER_D1_CREATE_TO_FILL_THIS"
+migrations_dir = "migrations"
+
+# KV cache for latest snapshot (Phase B). Uncomment after creating with:
+#   npx wrangler kv:namespace create LATEST_SNAPSHOT
+# [[kv_namespaces]]
+# binding = "LATEST_SNAPSHOT"
+# id      = "PLACEHOLDER"
+
+[observability]
+enabled = true
+head_sampling_rate = 1
