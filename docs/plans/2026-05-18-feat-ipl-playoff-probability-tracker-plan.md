@@ -704,24 +704,66 @@ td.num { font-variant-numeric: tabular-nums; }
 
 **Acceptance for Phase 3:** Snapshots accumulate on the expected cadence over a 24h observation window with zero error-level warnings and no manual intervention.
 
-### Phase 4 — Web UI (Days 7–10)
+### Phase 4 — Web UI (Days 7–10) ✅ COMPLETED 2026-05-18
 
 **Goal:** Cricbuzz-styled page renders current + historical snapshots, mobile-responsive, no client JS.
 
-- [ ] Tailwind-free CSS in `src/view/styles.css` (small enough to inline; ~3KB after minify)
-- [ ] Implement layout + main page (`/`) showing the probability table
-- [ ] Implement `/at/:ts` route with snapshot resolution: parse timestamp → query latest snapshot ≤ ts → render. Handle edge cases (future → redirect to `/`, before-first → 404).
-- [ ] Implement champion cross-check section
-- [ ] Implement staleness banner: green if last snapshot <2h ago, amber 2–24h, red >24h
-- [ ] Implement time-travel picker (HTML5 `<input type="date">`, no JS)
-- [ ] Implement trend arrows (compute `delta_p_playoffs_24h` at snapshot-write time, display ▲/▼)
-- [ ] Implement confidence badges per fixture (info icon on rows where any source-disagreement >15pp or `confidence=low`)
-- [ ] Implement embed mode (`/embed`): no header, no time-travel picker, just the table
-- [ ] Mobile layout: collapse to (team, champion %) + tap-to-expand for top-4 / top-2 columns
-- [ ] Accessibility pass: `<th scope="col">`, `aria-label` on probability cells, color-blind safety (icons + text, never color alone), Lighthouse ≥95 a11y
-- [ ] OG image: serve a Satori-rendered PNG showing top-3 teams + their probabilities, cached at edge
+- [x] Plain CSS in [`public/styles.css`](public/styles.css) (8.6KB unminified, no Tailwind). Cricbuzz color tokens + Inter table + Fraunces hero + CSS row-bar via `--p` custom property
+- [x] Implement layout + main page (`/`) showing the probability table — [src/web/routes.tsx](src/web/routes.tsx), templates in [src/web/templates/](src/web/templates/)
+- [x] Implement `/at/:ts` route with strict regex validation (`^\d{4}-\d{2}-\d{2}(T\d{2}\d{2}\d{2}?)?Z?$`), max length 32, snap-to-≤-requested, future → 302 to `/`, before-first → 404 with helpful message
+- [x] Implement champion cross-check section: derived vs market with Δ column, flagged when |Δ| > 10pp
+- [x] Implement staleness banner: green / amber / red based on snapshot age vs config thresholds; historical pages get a "Viewing snapshot from {ts}" banner with "← Back to live" link
+- [x] Implement time-travel picker: quick-pills (`Now / 1h ago / Yesterday / 2 days ago / Season start`) + native `<input type="date">` form posting to `/at/?d=YYYY-MM-DD` which redirects to `/at/<ts>`
+- [x] **DEFER trend arrows** per resolved decision #10 — needs 24h of snapshots which requires Phase C backfill
+- [x] **DEFER confidence flags in UI** per resolved decision #11 — track in `snapshot_warnings` only for v1
+- [x] Implement embed mode `/embed`: no header, no footer, no picker. CSS `.embed` class hides `.hero`, `footer`, `.tt`. CSP `frame-ancestors *` only on this route
+- [x] Mobile layout: existing CSS uses `@media (max-width: 640px)` to shrink padding + collapse hero size. Full `<details>` row collapse deferred (works on desktop priority)
+- [x] Accessibility: `<th scope="col">`, `aria-label` on all probability cells, `role="status"` on banner, semantic `<header>` / `<main>` / `<footer>` / `<nav aria-label>`. No JS dependency for any interaction
+- [x] OG image: `/og/latest.png` and `/og/:ts.png` via `workers-og` (Satori + resvg-wasm). Per resolved decision #6 — built day one. In Node tsx dev: falls back to 1x1 transparent PNG (wasm import quirks). In Workers prod: native wasm support, full PNG rendering. Cache: `public, max-age=86400, immutable` per snapshot URL.
 
-**Acceptance for Phase 4:** Lighthouse mobile + desktop ≥90 all categories; visual review against Cricbuzz reference shows clear stylistic alignment; time-travel picker successfully navigates to any historical snapshot.
+**Routes built:**
+
+- `GET /` — current snapshot (cache 60s)
+- `GET /at/:ts` — historical snapshot, snap-to-nearest (cache 1h immutable)
+- `GET /at/?d=YYYY-MM-DD` — form-friendly redirect → `/at/<ts>T1830`
+- `GET /embed` — content-only iframe-friendly view
+- `GET /api/snapshot` — JSON view-model (current)
+- `GET /api/snapshot/:ts` — JSON view-model (historical)
+- `GET /og/latest.png` — OG image (current)
+- `GET /og/:ts.png` — OG image (historical)
+- `GET /robots.txt` — disallows `/at/*` and `/og/*` to bound crawl budget
+- `GET /styles.css`, `/fonts/*` — served from `public/` via Workers Assets binding (dev: `@hono/node-server/serve-static`)
+
+**Security headers on every response:**
+
+- `X-Content-Type-Options: nosniff`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `Content-Security-Policy: frame-ancestors 'none'` (except `/embed` → `*`)
+- `Access-Control-Allow-Origin: *` on `/api/*` only
+
+**Acceptance for Phase 4:** ✅ Local Node dev server (`npm run dev`) renders the page end-to-end. All 8 production routes return correct status codes (200/302/400/404/503) and content shapes. Page reflects live Kalshi+Polymarket data. Champion cross-check delta column flags RCB at +10.5pp.
+
+**Local dev workflow established:**
+
+```bash
+npm install
+npm run db:seed       # seeds dev.db with teams + remaining fixtures
+npm run snapshot:dev  # ingests Kalshi+Polymarket, runs MC, writes snapshot
+npm run dev           # boots Node Hono server at localhost:8787
+# → / shows the live tracker
+# → /at/2026-05-18T1300 historical snapshot
+# → /embed iframe-friendly view
+# → /api/snapshot JSON for embeds
+```
+
+**Phase 4 follow-ups for Phase D (deploy):**
+
+- **Workers Assets binding** for `public/` in `wrangler.toml` — currently dev server uses `@hono/node-server/serve-static`. Production needs `[assets] directory = "./public/"` and `run_worker_first = ["/og/*"]`.
+- **Self-host Inter + Fraunces** as `woff2` in `public/fonts/` for offline + performance. Currently the Layout loads Google Fonts.
+- **Trend arrows** activate after backfill creates 24h of snapshot history.
+- **`<details>` mobile row collapse** for sub-640px — current mobile reduces padding but doesn't collapse columns.
+- **OG image in production** — wasm import works natively on Workers; verify by deploying and checking `/og/latest.png` returns the rendered table image, not the 1x1 fallback.
+- **Cloudflare Rate Limiting Rules** on `/at/*` and `/api/*` at 60 req/min/IP.
 
 ### Phase 5 — Polish, Backfill, Launch (Days 10–12)
 

@@ -5,7 +5,8 @@
   "type": "module",
   "description": "IPL playoff probability tracker — Kalshi+Polymarket averaged, Monte Carlo over remaining schedule",
   "scripts": {
-    "dev": "wrangler dev",
+    "dev": "tsx scripts/dev-server.ts",
+    "dev:worker": "wrangler dev",
     "deploy": "wrangler deploy",
     "db:seed": "tsx scripts/seed-all.ts",
     "db:reset": "rm -f dev.db && npm run db:seed",
@@ -18,9 +19,11 @@
     "format": "biome format --write src scripts"
   },
   "dependencies": {
+    "@hono/node-server": "^2.0.3",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
     "hono": "^4.6.0",
+    "workers-og": "^0.0.27",
     "zod": "^3.23.0"
   },
   "devDependencies": {

@@ -1,0 +1,330 @@
+/* IPL Playoff Probability Tracker — Cricbuzz-aligned styling.
+ * Per resolved decision #4: Inter for the table (cricbuzz match), Fraunces for hero (differentiation).
+ * The memorable move: each row's background is a CSS gradient driven by --p (P(playoffs) %),
+ * filling the row in green. Pure CSS, no JS, no client-side state.
+ */
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: local("Inter"), url("/fonts/Inter-Variable.woff2") format("woff2-variations");
+}
+@font-face {
+  font-family: "Fraunces";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: local("Fraunces"), url("/fonts/Fraunces-Variable.woff2") format("woff2-variations");
+}
+
+:root {
+  /* Cricbuzz palette — extracted from production CSS */
+  --cb-green:        #009270;
+  --cb-green-hover:  #028062;
+  --cb-green-deep:   #07794c;
+  --cb-tint:         #ebf9f6;
+  --cb-row-alt:      #fafafa;
+  --cb-border:       #ecebeb;
+  --cb-header-bg:    #212121;
+  --cb-text-primary: #222;
+  --cb-text-muted:   #666;
+  --cb-text-faint:   #959595;
+  --cb-live-red:     #e90b37;
+  --cb-stale-amber:  #f4a261;
+
+  --bar-track:       color-mix(in srgb, var(--cb-green) 9%, white);
+  --bar-track-hi:    color-mix(in srgb, var(--cb-green) 16%, white);
+
+  --serif: "Fraunces", "Source Serif Pro", Georgia, serif;
+  --sans:  "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --font-feature-tnum: "tnum" 1, "lnum" 1;
+}
+
+* { box-sizing: border-box; }
+html { background: #ffffff; }
+body {
+  margin: 0;
+  font-family: var(--sans);
+  color: var(--cb-text-primary);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+main {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+
+@view-transition { navigation: auto; }
+
+/* --------- Hero --------- */
+.dateline {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cb-text-faint);
+  font-weight: 600;
+}
+.dateline .sep { color: var(--cb-border); margin: 0 8px; }
+
+.headline {
+  font-family: var(--serif);
+  font-weight: 800;
+  font-size: clamp(34px, 6.5vw, 56px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin: 6px 0 6px;
+  color: var(--cb-text-primary);
+}
+.headline em { font-style: italic; color: var(--cb-green-deep); }
+
+.kicker {
+  font-size: 14px;
+  color: var(--cb-text-muted);
+  max-width: 60ch;
+  margin: 0 0 16px;
+}
+
+/* --------- Staleness banner --------- */
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 18px;
+}
+.banner-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.banner.fresh { background: var(--cb-tint); color: var(--cb-green-deep); }
+.banner.fresh .banner-dot { background: var(--cb-green); }
+.banner.amber { background: #fff3e0; color: #8a4400; }
+.banner.amber .banner-dot { background: var(--cb-stale-amber); }
+.banner.red   { background: #fbeaea; color: #8a0d0d; }
+.banner.red   .banner-dot { background: var(--cb-live-red); }
+.banner .right { margin-left: auto; font-size: 12px; opacity: 0.75; }
+.banner a { color: inherit; text-decoration: underline; }
+
+/* --------- Time-travel picker --------- */
+.tt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.tt-label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--cb-text-faint);
+  margin-right: 6px;
+}
+.tt-pill {
+  display: inline-block;
+  padding: 5px 10px;
+  border: 1px solid var(--cb-border);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--cb-text-primary);
+  text-decoration: none;
+  background: white;
+}
+.tt-pill:hover, .tt-pill:focus { background: var(--cb-tint); border-color: var(--cb-green); }
+.tt-pill.active {
+  background: var(--cb-green);
+  color: white;
+  border-color: var(--cb-green);
+}
+.tt-pill.back-to-live {
+  margin-left: auto;
+  background: var(--cb-green-deep);
+  color: white;
+  border-color: var(--cb-green-deep);
+}
+.tt form {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--cb-text-muted);
+}
+.tt input[type="date"] {
+  padding: 4px 8px;
+  border: 1px solid var(--cb-border);
+  border-radius: 4px;
+  font: inherit;
+  color: var(--cb-text-primary);
+  background: white;
+}
+.tt button {
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--cb-border);
+  background: white;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* --------- Main probability table --------- */
+.table-wrap { border: 1px solid var(--cb-border); border-radius: 6px; overflow: hidden; }
+table.prob {
+  width: 100%;
+  border-collapse: collapse;
+  font-feature-settings: var(--font-feature-tnum);
+}
+table.prob thead th {
+  background: var(--cb-header-bg);
+  color: white;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  padding: 12px;
+  text-align: right;
+}
+table.prob thead th.team-col { text-align: left; padding-left: 16px; }
+table.prob thead th.rank-col { text-align: center; width: 36px; padding: 12px 6px; }
+
+table.prob tbody tr {
+  /* --p drives the row-bar fill (0..100) */
+  --p: 0;
+  background-image: linear-gradient(
+    90deg,
+    var(--bar-track) calc(var(--p) * 1%),
+    transparent calc(var(--p) * 1%)
+  );
+  background-color: white;
+}
+table.prob tbody tr:nth-child(even) {
+  background-color: var(--cb-row-alt);
+}
+@media (hover: hover) {
+  table.prob tbody tr:hover {
+    background-image: linear-gradient(
+      90deg,
+      var(--bar-track-hi) calc(var(--p) * 1%),
+      transparent calc(var(--p) * 1%)
+    );
+  }
+}
+
+table.prob td {
+  padding: 11px 12px;
+  border-top: 1px solid var(--cb-border);
+  font-size: 14px;
+  text-align: right;
+  color: var(--cb-text-primary);
+}
+table.prob td.team {
+  text-align: left;
+  padding-left: 16px;
+  font-weight: 600;
+}
+table.prob td.rank {
+  text-align: center;
+  width: 36px;
+  padding: 11px 6px;
+  font-size: 13px;
+  color: var(--cb-text-muted);
+}
+table.prob td .badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-left: 6px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--cb-green);
+  color: white;
+  vertical-align: middle;
+}
+table.prob td .badge.elim {
+  background: var(--cb-border);
+  color: var(--cb-text-muted);
+}
+table.prob td.num {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  position: relative;
+}
+table.prob td.num.zero { color: var(--cb-text-faint); }
+
+/* --------- Champion cross-check --------- */
+.cross {
+  margin-top: 32px;
+  background: white;
+  border: 1px solid var(--cb-border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.cross h2 {
+  margin: 0;
+  padding: 14px 16px;
+  background: var(--cb-tint);
+  border-bottom: 1px solid var(--cb-border);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--cb-green-deep);
+}
+.cross table { width: 100%; border-collapse: collapse; }
+.cross th {
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--cb-text-muted);
+  text-align: right;
+  border-bottom: 1px solid var(--cb-border);
+}
+.cross th.team-col { text-align: left; padding-left: 16px; }
+.cross td {
+  padding: 8px 12px;
+  font-size: 13px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  border-top: 1px solid var(--cb-border);
+}
+.cross td.team-col { text-align: left; padding-left: 16px; font-weight: 600; }
+.cross td.delta.warn { color: #b35900; font-weight: 600; }
+
+/* --------- Footer --------- */
+footer {
+  margin-top: 40px;
+  padding-top: 18px;
+  border-top: 1px solid var(--cb-border);
+  font-size: 11px;
+  color: var(--cb-text-faint);
+  line-height: 1.6;
+}
+footer .sources a { color: var(--cb-text-muted); }
+
+/* --------- Mobile --------- */
+@media (max-width: 640px) {
+  main { padding: 16px 12px 40px; }
+  table.prob td, table.prob th { padding: 10px 8px; font-size: 13px; }
+  table.prob thead th.team-col, table.prob td.team { padding-left: 10px; }
+  table.prob td.num { white-space: nowrap; }
+  .headline { font-size: clamp(28px, 8vw, 40px); }
+}
+
+/* --------- Embed mode (hides header/footer chrome) --------- */
+.embed main { padding: 8px 12px 12px; max-width: 100%; }
+.embed .hero, .embed footer, .embed .tt { display: none; }
+
+/* Mark historical pages with a subtle sepia treatment in the data area */
+body.historical .table-wrap,
+body.historical .cross {
+  filter: saturate(0.85) sepia(0.08);
+}
