@@ -6,6 +6,7 @@ import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";
 import { d1ShimFromSqlite } from "../src/storage/d1-shim.ts";
+import { attachAdminRoutes } from "../src/web/admin.ts";
 import { attachOgRoutes } from "../src/web/og.ts";
 import { type AppEnv, buildApp } from "../src/web/routes.tsx";
 import { DB_PATH, openDb } from "./db.ts";
@@ -33,6 +34,11 @@ app.use("*", async (c, next) => {
 // Mount the production Hono app under the same routes.
 const prod = buildApp();
 attachOgRoutes(prod);
+// In Node dev we don't run the actual scheduled snapshot (it needs D1Database semantics).
+// /admin/refresh returns a clear message pointing to `npm run snapshot:dev` instead.
+attachAdminRoutes(prod, async () => {
+  throw new Error("Run `npm run snapshot:dev` in another terminal — dev-server doesn't drive the pipeline.");
+});
 app.route("/", prod);
 
 const port = Number(process.env.PORT ?? "8787");

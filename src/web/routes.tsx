@@ -3,6 +3,7 @@ import { html, raw } from "hono/html";
 import type { DbReadHandle } from "../storage/d1-shim.ts";
 import { getAllTeams, getLatestSnapshot, getSnapshotAtOrBefore } from "../storage/repo.ts";
 import { istDateTime, parseTtParam, pct, ttPath } from "./format.ts";
+import { styleSheetText } from "./styles.ts";
 import { ChampionCrossCheck } from "./templates/ChampionCrossCheck.tsx";
 import { Footer } from "./templates/Footer.tsx";
 import { Hero } from "./templates/Hero.tsx";
@@ -143,6 +144,7 @@ function renderPage(
         embedded={embedded}
         historical={vm.isHistorical}
         ogPath={ogPath}
+        styles={styleSheetText}
       >
         {embedded ? null : <Hero vm={vm} />}
         {embedded ? null : <TimeTravel isHistorical={vm.isHistorical} takenAtUtc={vm.takenAtUtc} />}

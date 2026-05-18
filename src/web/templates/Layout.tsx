@@ -1,4 +1,5 @@
 import type { FC, PropsWithChildren } from "hono/jsx";
+import { raw } from "hono/html";
 
 interface LayoutProps {
   title: string;
@@ -6,6 +7,7 @@ interface LayoutProps {
   embedded?: boolean;
   historical?: boolean;
   ogPath?: string;
+  styles?: string;
 }
 
 export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
@@ -14,6 +16,7 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
   embedded,
   historical,
   ogPath,
+  styles,
   children,
 }) => (
   <html lang="en">
@@ -38,7 +41,7 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = ({
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,800&display=swap"
         rel="stylesheet"
       />
-      <link rel="stylesheet" href="/styles.css" />
+      {styles ? <style>{raw(styles)}</style> : <link rel="stylesheet" href="/styles.css" />}
     </head>
     <body class={`${historical ? "historical" : ""} ${embedded ? "embed" : ""}`.trim()}>
       <main>{children}</main>

@@ -3,26 +3,35 @@ main = "src/index.ts"
 compatibility_date = "2026-05-01"
 compatibility_flags = ["nodejs_compat"]
 
-# Phase B will wire up the cron trigger; for Phase A we only need local D1 + snapshot scripts.
-# [triggers]
-# crons = ["*/10 * * * *"]
+# Snapshot cron: every 10 min, any day. We re-tighten with match-window logic in Phase E.
+# The handler's idempotency guard (8 min) keeps duplicate writes out if we ever overlap.
+[triggers]
+crons = ["*/10 * * * *"]
 
-# Local D1 binding. To attach a remote database, run:
+# D1 binding. Fill in the database_id after running:
 #   npx wrangler login
 #   npx wrangler d1 create playoffodds
-# Then paste the returned database_id below and uncomment the migrations_dir.
+# Wrangler will print the ID and a [[d1_databases]] block — paste the id here.
 [[d1_databases]]
-binding       = "DB"
-database_name = "playoffodds"
-database_id   = "PLACEHOLDER_RUN_WRANGLER_D1_CREATE_TO_FILL_THIS"
+binding        = "DB"
+database_name  = "playoffodds"
+database_id    = "REPLACE_AFTER_WRANGLER_D1_CREATE"
 migrations_dir = "migrations"
 
-# KV cache for latest snapshot (Phase B). Uncomment after creating with:
+# KV cache (Phase E will use this for the latest-snapshot fast path). For now it's optional —
+# the routes read directly from D1. Uncomment after running:
 #   npx wrangler kv:namespace create LATEST_SNAPSHOT
 # [[kv_namespaces]]
 # binding = "LATEST_SNAPSHOT"
-# id      = "PLACEHOLDER"
+# id      = "REPLACE_AFTER_WRANGLER_KV_CREATE"
 
 [observability]
-enabled = true
+enabled            = true
 head_sampling_rate = 1
+
+[observability.logs]
+invocation_logs = true
+
+# Build-time CSS regeneration so any edit to public/styles.css gets bundled into the Worker.
+[build]
+command = "npm run build:css"
